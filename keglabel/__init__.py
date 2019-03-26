@@ -79,7 +79,7 @@ def create_label(product_name=None, abv=None, volume=None, batch=None, expires=N
     for i, line in enumerate(break_text_whitespace(txt, font, LABEL_SIZE[0])):
         draw.text((x_pos, y_pos+line_spacing*i), line, font=font)
 
-    txt = "DLUO : {0}".format(expires)
+    txt = "DDM : {0}".format(expires)
     y_pos += 40
     font_path = resource_path(FONT_REGULAR)
     ifs = int(10*FONT_SCALING) # initial font size
