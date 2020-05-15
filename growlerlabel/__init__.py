@@ -17,11 +17,12 @@ BROTHER_QL_LABEL = "62"
 ARGUMENTS = {
     'product_name': {'help': 'Name of product', 'type': str, 'default': 'Anonymous Beer'},
     'abv': {'help': 'Alochol content', 'type': str, 'default': '?.?'},
-    'volume': {'help': 'Volume of product', 'type': str, 'default': '20L'},
+    'volume': {'help': 'Volume of product', 'type': str, 'default': '75cl'},
     'batch': {'help': 'Batch number', 'type': str, 'default': '???????'},
     'expires': {'help': 'Expire date', 'type': str, 'default': '???????'},
     'allergens': {'help': 'List of allergens', 'type': str, 'default': 'malt d\'orge'},
     'beer_description': {'help': 'Description of beer', 'type': str, 'default': 'Bière pur malt.'},
+    'repacked_by': {'help': 'Repacked_by', 'type': str, 'default': '?????'},
 }
 
 FONT_REGULAR = "Roboto-Regular.ttf"
@@ -37,7 +38,7 @@ BROTHER_QL_CONVERT_KWARGS = {
 def resource_path(rel_path):
     return os.path.join(os.path.dirname(__file__), rel_path)
 
-def create_label(product_name=None, abv=None, volume=None, batch=None, expires=None, allergens=None, beer_description=None):
+def create_label(product_name=None, abv=None, volume=None, batch=None, repacked_by=None, expires=None, allergens=None, beer_description=None):
     if not product_name: product_name = ARGUMENTS['product_name']['default']
     if not abv: abv = ARGUMENTS['abv']['default']
     if not volume: volume = ARGUMENTS['volume']['default']
@@ -45,56 +46,81 @@ def create_label(product_name=None, abv=None, volume=None, batch=None, expires=N
     if not expires: expires = ARGUMENTS['expires']['default']
     if not allergens: allergens = ARGUMENTS['allergens']['default']
     if not beer_description: beer_description = ARGUMENTS['beer_description']['default']
+    if not repacked_by: beer_description = ARGUMENTS['repacked_by']['default']
 
     im = Image.new("L", LABEL_SIZE, 255)
     draw = ImageDraw.Draw(im)
 
+    # brand LOGO
+    logo = Image.open(resource_path("logo.png"))
+    logo.thumbnail((255, 255), Image.ANTIALIAS)
+    im.paste(logo, box=(10, 20), mask=logo.split()[1])
+
     ## PREGNANT LOGO
-    logo = Image.open(resource_path("pregnant.png"))
-    im.paste(logo, box=(0, 30), mask=logo.split()[3])
+    pregnant_logo = Image.open(resource_path("pregnant.png"))
+    im.paste(pregnant_logo, box=(580, 170), mask=pregnant_logo.split()[3])
 
     ## Product name
-    x_pos, y_pos = (160, 0)
+    x_pos, y_pos = (270, 10)
     font_path = resource_path(FONT_MEDIUM)
-    ifs = int(15*FONT_SCALING) # initial font size
+    ifs = int(12*FONT_SCALING) # initial font size
     font = fit_text(product_name, LABEL_SIZE[0], font_path, ifs)
     draw.text((x_pos, y_pos), product_name, font=font, fill=0)
 
     ## ABV + VOL
-    txt = "{0} - Alc. {1}% vol".format(volume, abv)
+    txt = "Growler {0} - Alc. {1}% vol".format(volume, abv)
     y_pos += font.size * 1.2
     font_path = resource_path(FONT_REGULAR)
-    ifs = int(10*FONT_SCALING) # initial font size
+    ifs = int(7*FONT_SCALING) # initial font size
     font = fit_text(txt, LABEL_SIZE[0], font_path, ifs, break_func=break_text_whitespace, max_lines=2)
     line_spacing = int(font.size * 1.15)
     for i, line in enumerate(break_text_whitespace(txt, font, LABEL_SIZE[0])):
         draw.text((x_pos, y_pos+line_spacing*i), line, font=font)
 
-    ## Batch
-    txt = "Batch : {0}".format(batch)
+    ## lot
+    txt = "Lot : {0}".format(batch)
     y_pos += 40
     font_path = resource_path(FONT_REGULAR)
-    ifs = int(10*FONT_SCALING) # initial font size
+    ifs = int(7*FONT_SCALING) # initial font size
     font = fit_text(txt, LABEL_SIZE[0], font_path, ifs, break_func=break_text_whitespace, max_lines=2)
     line_spacing = int(font.size * 1.15)
     for i, line in enumerate(break_text_whitespace(txt, font, LABEL_SIZE[0])):
         draw.text((x_pos, y_pos+line_spacing*i), line, font=font)
 
     txt = "DDM : {0}".format(expires)
+    y_pos += 30
+    font_path = resource_path(FONT_REGULAR)
+    ifs = int(7*FONT_SCALING) # initial font size
+    font = fit_text(txt, LABEL_SIZE[0], font_path, ifs, break_func=break_text_whitespace, max_lines=2)
+    line_spacing = int(font.size * 1.15)
+    for i, line in enumerate(break_text_whitespace(txt, font, LABEL_SIZE[0])):
+        draw.text((x_pos, y_pos+line_spacing*i), line, font=font)
+
+    txt = "Mis en Growler par : {0}".format(repacked_by)
     y_pos += 40
     font_path = resource_path(FONT_REGULAR)
-    ifs = int(10*FONT_SCALING) # initial font size
+    ifs = int(4*FONT_SCALING) # initial font size
     font = fit_text(txt, LABEL_SIZE[0], font_path, ifs, break_func=break_text_whitespace, max_lines=2)
     line_spacing = int(font.size * 1.15)
     for i, line in enumerate(break_text_whitespace(txt, font, LABEL_SIZE[0])):
         draw.text((x_pos, y_pos+line_spacing*i), line, font=font)
 
 
+    y_pos += 40
+    font_path = resource_path(FONT_REGULAR)
+    ifs = int(5*FONT_SCALING) # initial font size
+    font = fit_text(beer_description, LABEL_SIZE[0], font_path, ifs, break_func=break_text_whitespace, max_lines=2)
+    line_spacing = int(font.size * 1.15)
+    for i, line in enumerate(break_text_whitespace(beer_description, font, LABEL_SIZE[0])):
+        draw.text((x_pos, y_pos+line_spacing*i), line, font=font)
+
+
+
     txt = "Contient :"
-    x_pos = 0
+    x_pos = 10
     y_pos += 70
     font_path = resource_path(FONT_REGULAR)
-    ifs = int(8*FONT_SCALING) # initial font size
+    ifs = int(5*FONT_SCALING) # initial font size
     font = fit_text(txt, LABEL_SIZE[0], font_path, ifs, break_func=break_text_whitespace, max_lines=2)
     line_spacing = int(font.size * 1.15)
     for i, line in enumerate(break_text_whitespace(txt, font, LABEL_SIZE[0])):
@@ -102,22 +128,12 @@ def create_label(product_name=None, abv=None, volume=None, batch=None, expires=N
 
 
     txt = "{0}.".format(allergens)
-    x_pos += 145
+    x_pos += 95
     font_path = resource_path(FONT_BOLD)
-    ifs = int(8*FONT_SCALING) # initial font size
+    ifs = int(5*FONT_SCALING) # initial font size
     font = fit_text(txt, LABEL_SIZE[0], font_path, ifs, break_func=break_text_whitespace, max_lines=2)
     line_spacing = int(font.size * 1.15)
     for i, line in enumerate(break_text_whitespace(txt, font, LABEL_SIZE[0])):
-        draw.text((x_pos, y_pos+line_spacing*i), line, font=font)
-
-    y_pos += 50
-    x_pos = 0
-
-    font_path = resource_path(FONT_REGULAR)
-    ifs = int(8*FONT_SCALING) # initial font size
-    font = fit_text(beer_description, LABEL_SIZE[0], font_path, ifs, break_func=break_text_whitespace, max_lines=2)
-    line_spacing = int(font.size * 1.15)
-    for i, line in enumerate(break_text_whitespace(beer_description, font, LABEL_SIZE[0])):
         draw.text((x_pos, y_pos+line_spacing*i), line, font=font)
 
     return im
